@@ -201,6 +201,21 @@ class DatabaseSeeder extends Seeder
         // Seed Soal Bahasa Indonesia Kelas 1
         $this->call(SoalBahasaIndonesiaKelas1Seeder::class);
 
+        // Seed Soal IPA Kelas 1
+        $this->call(SoalIpaKelas1Seeder::class);
+
+        // Seed Soal IPS Kelas 1
+        $this->call(SoalIpsKelas1Seeder::class);
+
+        // Seed Soal Matematika Kelas 1
+        $this->call(SoalMatematikaKelas1Seeder::class);
+
+        // Seed Soal PKN Kelas 1
+        $this->call(SoalPknKelas1Seeder::class);
+
+        // Seed Soal Seni Budaya Kelas 1
+        $this->call(SoalSeniBudayaKelas1Seeder::class);
+
         $this->command->info('Database seeded successfully!');
         $this->command->info('Admin: admin@madrasah.com / password');
         $this->command->info('Kepala: kepala@madrasah.com / password');

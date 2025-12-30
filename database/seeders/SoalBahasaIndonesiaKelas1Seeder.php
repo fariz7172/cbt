@@ -18,17 +18,15 @@ class SoalBahasaIndonesiaKelas1Seeder extends Seeder
             ['kode' => 'BIN', 'jenis' => 'guru_kelas'] 
         );
 
-        // 2. Ambil User Guru untuk author soal (ambil yg pertama atau buat baru)
-        $guru = Guru::first();
-        if (!$guru) {
-            // Fallback jika belum ada guru, kita pakai user admin atau buat dummy
-            $user = User::where('role', 'guru')->first();
-            if ($user && $user->guru) {
-                $guru = $user->guru;
-            } else {
-                echo "Skipping seeder: Tidak ada data Guru. Silakan jalankan seeder Guru terlebih dahulu.\n";
-                return;
-            }
+        // 2. Ambil User Guru Kelas 1 (Siti Fatimah)
+        $userGuru = User::where('email', 'guru.kelas1@madrasah.com')->first();
+        
+        if ($userGuru && $userGuru->guru) {
+            $guru = $userGuru->guru;
+        } else {
+            // Fallback ke guru pertama jika user spesifik tidak ada
+            $guru = Guru::first();
+            echo "Warning: User guru.kelas1 tidak ditemukan, menggunakan guru id: {$guru->id}\n";
         }
 
         $commonData = [
