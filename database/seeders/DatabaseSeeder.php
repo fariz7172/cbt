@@ -198,6 +198,9 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        // Seed Soal Bahasa Indonesia Kelas 1
+        $this->call(SoalBahasaIndonesiaKelas1Seeder::class);
+
         $this->command->info('Database seeded successfully!');
         $this->command->info('Admin: admin@madrasah.com / password');
         $this->command->info('Kepala: kepala@madrasah.com / password');

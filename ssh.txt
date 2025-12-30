@@ -1,0 +1,1 @@
+ssh -p 65002 u674511048@farizahmad.com "cd /home/u674511048/domains/farizahmad.com/public_html/cbt-online; git reset --hard origin/farizahmad.github.io; git pull origin farizahmad.github.io; php artisan key:generate --force; php artisan migrate --force; php artisan optimize:clear; echo '=== PERBAIKAN SELESAI ==='"
