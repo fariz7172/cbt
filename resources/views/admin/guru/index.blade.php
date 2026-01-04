@@ -23,6 +23,20 @@
 <!-- Filter -->
 <div class="card mb-6">
     <form action="{{ route('admin.guru.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
+        <!-- Sekolah Filter (Super Admin Only) -->
+        @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+            <div class="w-full sm:w-48">
+                <select name="sekolah_id" class="form-select">
+                    <option value="">Semua Sekolah</option>
+                    @foreach($sekolahs as $sekolah)
+                        <option value="{{ $sekolah->id }}" {{ request('sekolah_id') == $sekolah->id ? 'selected' : '' }}>
+                            {{ $sekolah->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+        
         <div class="flex-1">
             <input type="text" name="search" value="{{ request('search') }}" 
                    placeholder="Cari nama atau NIP..." 
@@ -40,6 +54,12 @@
             <i class="fas fa-search"></i>
             <span>Cari</span>
         </button>
+        @if(request()->hasAny(['search', 'jabatan', 'sekolah_id']))
+            <a href="{{ route('admin.guru.index') }}" class="btn-ghost">
+                <i class="fas fa-times"></i>
+                <span>Reset</span>
+            </a>
+        @endif
     </form>
 </div>
 
@@ -50,6 +70,9 @@
             <tr>
                 <th>NIP</th>
                 <th>Nama</th>
+                @if(auth()->user()->isSuperAdmin())
+                    <th>Sekolah</th>
+                @endif
                 <th>Jabatan</th>
                 <th>Email</th>
                 <th>No. HP</th>
@@ -62,6 +85,11 @@
                 <tr>
                     <td class="font-mono text-sm">{{ $guru->nip }}</td>
                     <td class="font-medium">{{ $guru->nama }}</td>
+                    @if(auth()->user()->isSuperAdmin())
+                        <td>
+                            <span class="badge-primary">{{ $guru->sekolah->nama ?? '-' }}</span>
+                        </td>
+                    @endif
                     <td>
                         @php
                             $jabatanClass = match($guru->jabatan) {
@@ -103,7 +131,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center py-8 text-gray-500">
+                    <td colspan="{{ auth()->user()->isSuperAdmin() ? '8' : '7' }}" class="text-center py-8 text-gray-500">
                         <i class="fas fa-inbox text-4xl mb-3"></i>
                         <p>Belum ada data guru.</p>
                     </td>

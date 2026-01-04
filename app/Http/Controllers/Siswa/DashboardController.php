@@ -12,6 +12,13 @@ class DashboardController extends Controller
     public function index()
     {
         $siswa = auth()->user()->siswa;
+        
+        // Check if user has siswa data
+        if (!$siswa) {
+            auth()->logout();
+            return redirect()->route('login')->with('error', 'Akun Anda tidak memiliki data siswa. Silakan hubungi administrator.');
+        }
+        
         $currentRombel = $siswa->currentRombel();
 
         // Get available ujians

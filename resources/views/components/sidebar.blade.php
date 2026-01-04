@@ -33,7 +33,49 @@
 
     <!-- Navigation -->
     <nav class="flex-1 py-4 overflow-y-auto">
-        @if($role === 'admin')
+        @if($role === 'super_admin')
+            <!-- Super Admin Menu -->
+            <div class="px-4 mb-2">
+                <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider">Management</p>
+            </div>
+            <a href="{{ route('super-admin.dashboard') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.dashboard') ? 'active' : '' }}">
+                <i class="fas fa-home w-5"></i>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('super-admin.sekolah.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.sekolah') ? 'active' : '' }}">
+                <i class="fas fa-school w-5"></i>
+                <span>Data Sekolah</span>
+            </a>
+            <a href="{{ route('super-admin.admin.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.admin') ? 'active' : '' }}">
+                <i class="fas fa-user-shield w-5"></i>
+                <span>Data Admin</span>
+            </a>
+
+            <div class="px-4 mt-6 mb-2">
+                <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider">Data Multi-Sekolah</p>
+            </div>
+            <a href="{{ route('super-admin.data.guru.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.data.guru') ? 'active' : '' }}">
+                <i class="fas fa-chalkboard-teacher w-5"></i>
+                <span>Semua Guru</span>
+            </a>
+            <a href="{{ route('super-admin.data.siswa.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.data.siswa') ? 'active' : '' }}">
+                <i class="fas fa-user-graduate w-5"></i>
+                <span>Semua Siswa</span>
+            </a>
+            <a href="{{ route('super-admin.data.kelas.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.data.kelas') ? 'active' : '' }}">
+                <i class="fas fa-door-open w-5"></i>
+                <span>Semua Kelas</span>
+            </a>
+            <a href="{{ route('super-admin.data.pelajaran.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.data.pelajaran') ? 'active' : '' }}">
+                <i class="fas fa-book w-5"></i>
+                <span>Semua Pelajaran</span>
+            </a>
+            <a href="{{ route('super-admin.data.rombel.index') }}" class="sidebar-link {{ str_starts_with($currentRoute, 'super-admin.data.rombel') ? 'active' : '' }}">
+                <i class="fas fa-users w-5"></i>
+                <span>Semua Rombel</span>
+            </a>
+
+        @elseif($role === 'admin')
             <!-- Admin Menu -->
             <div class="px-4 mb-2">
                 <p class="text-xs font-semibold text-primary-300 uppercase tracking-wider">Menu Utama</p>

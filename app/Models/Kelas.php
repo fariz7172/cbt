@@ -12,9 +12,18 @@ class Kelas extends Model
     protected $table = 'kelas';
 
     protected $fillable = [
+        'sekolah_id',
         'tingkat',
         'nama',
     ];
+
+    /**
+     * Get the sekolah for this kelas.
+     */
+    public function sekolah()
+    {
+        return $this->belongsTo(Sekolah::class);
+    }
 
     /**
      * Get the rombels for this kelas.

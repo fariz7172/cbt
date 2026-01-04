@@ -22,7 +22,21 @@
 
 <!-- Filter -->
 <div class="card mb-6">
-    <form action="{{ route('admin.siswa.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
+    <form action="{{ route('admin.siswa.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4" id="filterForm">
+        <!-- Sekolah Filter (Super Admin Only) -->
+        @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+            <div class="w-full sm:w-48">
+                <select name="sekolah_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Semua Sekolah</option>
+                    @foreach($sekolahs as $sekolah)
+                        <option value="{{ $sekolah->id }}" {{ request('sekolah_id') == $sekolah->id ? 'selected' : '' }}>
+                            {{ $sekolah->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+        
         <div class="flex-1">
             <input type="text" name="search" value="{{ request('search') }}" 
                    placeholder="Cari nama atau NISN..." 
@@ -47,6 +61,12 @@
             <i class="fas fa-search"></i>
             <span>Cari</span>
         </button>
+        @if(request()->hasAny(['search', 'kelas_id', 'jenis_kelamin', 'sekolah_id']))
+            <a href="{{ route('admin.siswa.index') }}" class="btn-ghost">
+                <i class="fas fa-times"></i>
+                <span>Reset</span>
+            </a>
+        @endif
     </form>
 </div>
 
@@ -57,6 +77,9 @@
             <tr>
                 <th>NISN</th>
                 <th>Nama</th>
+                @if(auth()->user()->isSuperAdmin())
+                    <th>Sekolah</th>
+                @endif
                 <th>Jenis Kelamin</th>
                 <th>Email</th>
                 <th>Kelas</th>
@@ -69,6 +92,11 @@
                 <tr>
                     <td class="font-mono text-sm">{{ $siswa->nisn }}</td>
                     <td class="font-medium">{{ $siswa->nama }}</td>
+                    @if(auth()->user()->isSuperAdmin())
+                        <td>
+                            <span class="badge-primary">{{ $siswa->sekolah->nama ?? '-' }}</span>
+                        </td>
+                    @endif
                     <td>
                         @if($siswa->jenis_kelamin == 'L')
                             <span class="badge-info">Laki-laki</span>
@@ -112,7 +140,7 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center py-8 text-gray-500">
+                    <td colspan="{{ auth()->user()->isSuperAdmin() ? '8' : '7' }}" class="text-center py-8 text-gray-500">
                         <i class="fas fa-inbox text-4xl mb-3"></i>
                         <p>Belum ada data siswa.</p>
                     </td>

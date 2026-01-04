@@ -27,6 +27,8 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'sekolah_id' => ['nullable', 'exists:sekolahs,id'],
+            'role' => ['nullable', 'in:admin,guru,siswa'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
@@ -47,6 +49,37 @@ class LoginRequest extends FormRequest
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
+        }
+
+        $user = Auth::user();
+
+        // If Super Admin is selected (sekolah_id is null/empty), verify user is super_admin
+        if (empty($this->sekolah_id)) {
+            if (!$user->isSuperAdmin()) {
+                Auth::logout();
+                RateLimiter::hit($this->throttleKey());
+                throw ValidationException::withMessages([
+                    'email' => 'Anda bukan Super Admin.',
+                ]);
+            }
+        } else {
+            // Validate sekolah_id matches
+            if ($user->sekolah_id != $this->sekolah_id) {
+                Auth::logout();
+                RateLimiter::hit($this->throttleKey());
+                throw ValidationException::withMessages([
+                    'email' => 'Email tidak terdaftar di sekolah yang dipilih.',
+                ]);
+            }
+
+            // Validate role matches
+            if ($this->role && $user->role !== $this->role) {
+                Auth::logout();
+                RateLimiter::hit($this->throttleKey());
+                throw ValidationException::withMessages([
+                    'email' => 'Tipe akun tidak sesuai dengan yang dipilih.',
+                ]);
+            }
         }
 
         RateLimiter::clear($this->throttleKey());

@@ -25,12 +25,12 @@
         @include('components.sidebar')
 
         <!-- Main Content -->
-        <div class="flex-1 ml-0 lg:ml-64 transition-all duration-300">
+        <div class="flex-1 ml-0 lg:ml-64 transition-all duration-300 min-w-0 overflow-hidden">
             <!-- Navbar -->
             @include('components.navbar')
 
             <!-- Page Content -->
-            <main class="p-6">
+            <main class="p-4 md:p-6 overflow-x-hidden max-w-full">
                 @if(session('success'))
                     <div class="alert-success animate-fade-in">
                         <i class="fas fa-check-circle text-lg"></i>

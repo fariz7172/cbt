@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SuperAdmin\DashboardController as SuperAdminDashboardController;
+use App\Http\Controllers\SuperAdmin\SekolahController;
+use App\Http\Controllers\SuperAdmin\AdminController as SuperAdminAdminController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\SiswaController;
@@ -28,7 +31,9 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     $user = auth()->user();
     
-    if ($user->isAdmin()) {
+    if ($user->isSuperAdmin()) {
+        return redirect()->route('super-admin.dashboard');
+    } elseif ($user->isAdmin()) {
         return redirect()->route('admin.dashboard');
     } elseif ($user->isGuru()) {
         return redirect()->route('guru.dashboard');
@@ -43,8 +48,35 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Super Admin Routes
+Route::middleware(['auth', 'role:super_admin'])->prefix('super-admin')->name('super-admin.')->group(function () {
+    Route::get('/dashboard', [SuperAdminDashboardController::class, 'index'])->name('dashboard');
+    
+    // Sekolah Management
+    Route::resource('sekolah', SekolahController::class);
+    
+    // Admin Management
+    Route::resource('admin', SuperAdminAdminController::class);
+    
+    // Data Management (Super Admin can access all school data)
+    // These routes use the same controllers as Admin, but without sekolah_scope middleware
+    Route::prefix('data')->name('data.')->group(function () {
+        Route::resource('guru', GuruController::class);
+        Route::resource('siswa', SiswaController::class);
+        Route::resource('kelas', KelasController::class)->except(['show']);
+        Route::resource('pelajaran', PelajaranController::class)->except(['show']);
+        Route::resource('rombel', RombelController::class);
+        
+        // Rombel Management
+        Route::get('/rombel/{rombel}/manage-siswa', [RombelController::class, 'manageSiswa'])->name('rombel.manage-siswa');
+        Route::put('/rombel/{rombel}/update-siswa', [RombelController::class, 'updateSiswa'])->name('rombel.update-siswa');
+        Route::get('/rombel/{rombel}/manage-pelajaran', [RombelController::class, 'managePelajaran'])->name('rombel.manage-pelajaran');
+        Route::put('/rombel/{rombel}/update-pelajaran', [RombelController::class, 'updatePelajaran'])->name('rombel.update-pelajaran');
+    });
+});
+
 // Admin Routes
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin', 'sekolah_scope'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
     
     // CRUD Routes
@@ -62,13 +94,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // Guru Routes
-Route::middleware(['auth', 'role:guru'])->prefix('guru')->name('guru.')->group(function () {
+Route::middleware(['auth', 'role:guru', 'sekolah_scope'])->prefix('guru')->name('guru.')->group(function () {
     Route::get('/dashboard', [GuruDashboardController::class, 'index'])->name('dashboard');
     
     // Bank Soal
+    // Bank Soal Routes
+    Route::get('/bank-soal/download-template', [BankSoalController::class, 'downloadTemplate'])->name('bank-soal.download-template');
+    Route::get('/bank-soal/import', [BankSoalController::class, 'showImportForm'])->name('bank-soal.import');
+    Route::post('/bank-soal/import', [BankSoalController::class, 'processImport'])->name('bank-soal.process-import');
+    Route::get('/bank-soal/create-batch', [BankSoalController::class, 'createBatch'])->name('bank-soal.create-batch');
+    Route::post('/bank-soal/store-batch', [BankSoalController::class, 'storeBatch'])->name('bank-soal.store-batch');
     Route::resource('bank-soal', BankSoalController::class);
-    Route::get('/bank-soal-batch/create', [BankSoalController::class, 'createBatch'])->name('bank-soal.create-batch');
-    Route::post('/bank-soal-batch/store', [BankSoalController::class, 'storeBatch'])->name('bank-soal.store-batch');
     
     // Ujian
     Route::resource('ujian', GuruUjianController::class);

@@ -21,6 +21,24 @@
         @csrf
         
         <div class="space-y-6">
+            <!-- Sekolah Selection (Super Admin Only) -->
+            @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+                <div>
+                    <label for="sekolah_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
+                    <select name="sekolah_id" id="sekolah_id" class="form-select @error('sekolah_id') border-danger @enderror" required>
+                        <option value="">Pilih Sekolah</option>
+                        @foreach($sekolahs as $sekolah)
+                            <option value="{{ $sekolah->id }}" {{ old('sekolah_id') == $sekolah->id ? 'selected' : '' }}>
+                                {{ $sekolah->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('sekolah_id')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+            
             <!-- Kelas -->
             <div>
                 <label for="kelas_id" class="form-label">Kelas <span class="text-danger">*</span></label>
@@ -28,7 +46,9 @@
                         class="form-select @error('kelas_id') border-danger @enderror" required>
                     <option value="">Pilih Kelas</option>
                     @foreach($kelass as $kelas)
-                        <option value="{{ $kelas->id }}" {{ old('kelas_id') == $kelas->id ? 'selected' : '' }}>
+                        <option value="{{ $kelas->id }}" 
+                                data-sekolah-id="{{ $kelas->sekolah_id }}"
+                                {{ old('kelas_id') == $kelas->id ? 'selected' : '' }}>
                             {{ $kelas->nama }} (Tingkat {{ $kelas->tingkat }})
                         </option>
                     @endforeach
@@ -94,4 +114,48 @@
         </div>
     </form>
 </div>
+
+@if(auth()->user()->isSuperAdmin())
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const sekolahSelect = document.getElementById('sekolah_id');
+    const kelasSelect = document.getElementById('kelas_id');
+    
+    if (sekolahSelect && kelasSelect) {
+        // Store all options
+        const allKelasOptions = Array.from(kelasSelect.options);
+        
+        sekolahSelect.addEventListener('change', function() {
+            const selectedSekolahId = this.value;
+            
+            // Clear current options except the first one
+            kelasSelect.innerHTML = '<option value="">Pilih Kelas</option>';
+            
+            if (selectedSekolahId) {
+                // Filter and add options that match the selected sekolah
+                allKelasOptions.forEach(option => {
+                    if (option.value && option.dataset.sekolahId === selectedSekolahId) {
+                        kelasSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+            } else {
+                // If no sekolah selected, show all kelas
+                allKelasOptions.forEach(option => {
+                    if (option.value) {
+                        kelasSelect.appendChild(option.cloneNode(true));
+                    }
+                });
+            }
+        });
+        
+        // Trigger change on page load if sekolah is already selected
+        if (sekolahSelect.value) {
+            sekolahSelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
+@endpush
+@endif
 @endsection

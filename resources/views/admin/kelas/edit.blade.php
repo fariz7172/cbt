@@ -22,6 +22,24 @@
         @method('PUT')
         
         <div class="space-y-6">
+            <!-- Sekolah Selection (Super Admin Only) -->
+            @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+                <div>
+                    <label for="sekolah_id" class="form-label">Sekolah <span class="text-danger">*</span></label>
+                    <select name="sekolah_id" id="sekolah_id" class="form-select @error('sekolah_id') border-danger @enderror" required>
+                        <option value="">Pilih Sekolah</option>
+                        @foreach($sekolahs as $sekolah)
+                            <option value="{{ $sekolah->id }}" {{ old('sekolah_id', $kelas->sekolah_id) == $sekolah->id ? 'selected' : '' }}>
+                                {{ $sekolah->nama }}
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('sekolah_id')
+                        <p class="form-error">{{ $message }}</p>
+                    @enderror
+                </div>
+            @endif
+            
             <!-- Tingkat -->
             <div>
                 <label for="tingkat" class="form-label">Tingkat Kelas <span class="text-danger">*</span></label>

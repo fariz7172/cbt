@@ -37,14 +37,24 @@ class PelajaranController extends Controller
 
     public function store(Request $request)
     {
+        $sekolahId = auth()->user()->sekolah_id;
+        
         $validated = $request->validate([
-            'kode' => 'required|string|max:10|unique:pelajarans,kode',
+            'kode' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('pelajarans', 'kode')->where(function ($query) use ($sekolahId) {
+                    return $query->where('sekolah_id', $sekolahId);
+                })
+            ],
             'nama' => 'required|string|max:255',
             'jenis' => 'required|in:guru_kelas,guru_mapel',
             'is_active' => 'boolean',
         ]);
 
         $validated['is_active'] = $validated['is_active'] ?? true;
+        $validated['sekolah_id'] = $sekolahId;
 
         Pelajaran::create($validated);
 
@@ -59,8 +69,19 @@ class PelajaranController extends Controller
 
     public function update(Request $request, Pelajaran $pelajaran)
     {
+        $sekolahId = $pelajaran->sekolah_id;
+        
         $validated = $request->validate([
-            'kode' => ['required', 'string', 'max:10', Rule::unique('pelajarans', 'kode')->ignore($pelajaran->id)],
+            'kode' => [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('pelajarans', 'kode')
+                    ->ignore($pelajaran->id)
+                    ->where(function ($query) use ($sekolahId) {
+                        return $query->where('sekolah_id', $sekolahId);
+                    })
+            ],
             'nama' => 'required|string|max:255',
             'jenis' => 'required|in:guru_kelas,guru_mapel',
             'is_active' => 'boolean',

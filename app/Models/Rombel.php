@@ -10,11 +10,20 @@ class Rombel extends Model
     use HasFactory;
 
     protected $fillable = [
+        'sekolah_id',
         'kelas_id',
         'wali_kelas_id',
         'tahun_ajaran',
         'semester',
     ];
+
+    /**
+     * Get the sekolah for this rombel.
+     */
+    public function sekolah()
+    {
+        return $this->belongsTo(Sekolah::class);
+    }
 
     /**
      * Get the kelas for this rombel.

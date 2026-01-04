@@ -11,6 +11,7 @@ class Guru extends Model
 
     protected $fillable = [
         'user_id',
+        'sekolah_id',
         'nip',
         'nama',
         'jabatan',
@@ -18,6 +19,14 @@ class Guru extends Model
         'alamat',
         'foto',
     ];
+
+    /**
+     * Get the sekolah for this guru.
+     */
+    public function sekolah()
+    {
+        return $this->belongsTo(Sekolah::class);
+    }
 
     /**
      * Get the user that owns the guru.

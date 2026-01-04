@@ -21,6 +21,24 @@
         @csrf
         @method('PUT')
 
+        <!-- Sekolah Selection (Super Admin Only) -->
+        @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+            <div class="form-group">
+                <label class="form-label" for="sekolah_id">Sekolah <span class="text-danger">*</span></label>
+                <select name="sekolah_id" id="sekolah_id" class="form-select @error('sekolah_id') border-danger @enderror" required>
+                    <option value="">Pilih Sekolah</option>
+                    @foreach($sekolahs as $sekolah)
+                        <option value="{{ $sekolah->id }}" {{ old('sekolah_id', $guru->sekolah_id) == $sekolah->id ? 'selected' : '' }}>
+                            {{ $sekolah->nama }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('sekolah_id')
+                    <p class="form-error">{{ $message }}</p>
+                @enderror
+            </div>
+        @endif
+
         <div class="form-group">
             <label class="form-label" for="nama">Nama Lengkap <span class="text-danger">*</span></label>
             <input type="text" name="nama" id="nama" value="{{ old('nama', $guru->nama) }}" 

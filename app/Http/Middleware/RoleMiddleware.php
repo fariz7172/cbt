@@ -25,6 +25,11 @@ class RoleMiddleware
             return redirect()->route('login')->with('error', 'Akun Anda tidak aktif.');
         }
 
+        // Super Admin can access all routes
+        if ($request->user()->isSuperAdmin()) {
+            return $next($request);
+        }
+
         if (!in_array($request->user()->role, $roles)) {
             abort(403, 'Anda tidak memiliki akses ke halaman ini.');
         }

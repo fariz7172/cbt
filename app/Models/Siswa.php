@@ -11,6 +11,7 @@ class Siswa extends Model
 
     protected $fillable = [
         'user_id',
+        'sekolah_id',
         'kelas_id',
         'nisn',
         'nama',
@@ -25,6 +26,14 @@ class Siswa extends Model
     protected $casts = [
         'tanggal_lahir' => 'date',
     ];
+
+    /**
+     * Get the sekolah for this siswa.
+     */
+    public function sekolah()
+    {
+        return $this->belongsTo(Sekolah::class);
+    }
 
     /**
      * Get the user that owns the siswa.

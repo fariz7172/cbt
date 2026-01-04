@@ -22,7 +22,21 @@
 
 <!-- Filter -->
 <div class="card mb-6">
-    <form action="{{ route('admin.rombel.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
+    <form action="{{ route('admin.rombel.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4" id="filterForm">
+        <!-- Sekolah Filter (Super Admin Only) -->
+        @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+            <div class="w-full sm:w-48">
+                <select name="sekolah_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Semua Sekolah</option>
+                    @foreach($sekolahs as $sekolah)
+                        <option value="{{ $sekolah->id }}" {{ request('sekolah_id') == $sekolah->id ? 'selected' : '' }}>
+                            {{ $sekolah->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+        
         <div class="w-full sm:w-48">
             <select name="tahun_ajaran" class="form-select">
                 <option value="">Semua Tahun Ajaran</option>
@@ -50,7 +64,7 @@
             <i class="fas fa-filter"></i>
             <span>Filter</span>
         </button>
-        @if(request()->hasAny(['tahun_ajaran', 'semester', 'kelas_id']))
+        @if(request()->hasAny(['tahun_ajaran', 'semester', 'kelas_id', 'sekolah_id']))
             <a href="{{ route('admin.rombel.index') }}" class="btn-ghost">
                 <i class="fas fa-times"></i>
                 <span>Reset</span>
@@ -77,7 +91,7 @@
             @forelse($rombels as $rombel)
                 <tr>
                     <td class="font-medium">
-                        <span class="badge-primary">{{ $rombel->kelas->nama }}</span>
+                        <span class="badge-primary">{{ $rombel->kelas->nama ?? 'N/A' }}</span>
                     </td>
                     <td>{{ $rombel->tahun_ajaran }}</td>
                     <td>

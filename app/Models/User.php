@@ -22,6 +22,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'sekolah_id',
         'is_active',
     ];
 
@@ -47,6 +48,14 @@ class User extends Authenticatable
     ];
 
     /**
+     * Get the sekolah for this user.
+     */
+    public function sekolah()
+    {
+        return $this->belongsTo(Sekolah::class);
+    }
+
+    /**
      * Get the guru profile associated with the user.
      */
     public function guru()
@@ -60,6 +69,14 @@ class User extends Authenticatable
     public function siswa()
     {
         return $this->hasOne(Siswa::class);
+    }
+
+    /**
+     * Check if user is super admin.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
     }
 
     /**

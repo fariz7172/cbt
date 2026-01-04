@@ -18,36 +18,80 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Admin
-        User::create([
-            'name' => 'Administrator',
-            'email' => 'admin@gmail.com',
-            'password' => Hash::make('password'),
-            'role' => 'admin',
-            'is_active' => true,
-        ]);
+        // Call SekolahSeeder first (creates Super Admin, Sekolahs, and Admin users)
+        $this->call(SekolahSeeder::class);
 
-        // Create Kelas 1-6 (each with A and B)
+        // Get or create sample schools for demo data
+        $sekolah1 = \App\Models\Sekolah::firstOrCreate(
+            ['nsm' => '111233040001'],
+            [
+                'nama' => 'MI Nurul Huda Demo',
+                'alamat' => 'Jl. Pendidikan No. 123, Jakarta',
+                'telepon' => '021-12345678',
+                'email' => 'info@minurulhuda.sch.id',
+                'is_active' => true,
+            ]
+        );
+
+        $sekolah2 = \App\Models\Sekolah::firstOrCreate(
+            ['nsm' => '111233040002'],
+            [
+                'nama' => 'MI Al-Ikhlas Demo',
+                'alamat' => 'Jl. Raya Pendidikan No. 456, Bogor',
+                'telepon' => '0251-87654321',
+                'email' => 'info@mialikhlas.sch.id',
+                'is_active' => true,
+            ]
+        );
+
+        // Create Admin for Demo Sekolah 1 if not exists
+        User::firstOrCreate(
+            ['email' => 'admin@minurulhuda.com'],
+            [
+                'name' => 'Admin MI Nurul Huda',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'sekolah_id' => $sekolah1->id,
+                'is_active' => true,
+            ]
+        );
+
+        // Create Admin for Demo Sekolah 2 if not exists
+        User::firstOrCreate(
+            ['email' => 'admin@mialikhlas.com'],
+            [
+                'name' => 'Admin MI Al-Ikhlas',
+                'password' => Hash::make('password'),
+                'role' => 'admin',
+                'sekolah_id' => $sekolah2->id,
+                'is_active' => true,
+            ]
+        );
+
+        // Create Kelas 1-6 for Sekolah 1 (each with A and B)
         $kelasData = [];
         for ($tingkat = 1; $tingkat <= 6; $tingkat++) {
             foreach (['A', 'B'] as $suffix) {
                 $kelasData[] = Kelas::create([
+                    'sekolah_id' => $sekolah1->id,
                     'tingkat' => $tingkat,
                     'nama' => $tingkat . $suffix,
                 ]);
             }
         }
 
-        // Create Kepala Madrasah
+        // Create Kepala Madrasah for Sekolah 1
         $kepalaMadrasahUser = User::create([
             'name' => 'H. Ahmad Syafii, S.Pd.I',
             'email' => 'kamad@madrasah.com',
             'password' => Hash::make('password'),
             'role' => 'guru',
+            'sekolah_id' => $sekolah1->id,
             'is_active' => true,
         ]);
         Guru::create([
             'user_id' => $kepalaMadrasahUser->id,
+            'sekolah_id' => $sekolah1->id,
             'nip' => '1980010120050011001',
             'nama' => 'H. Ahmad Syafii, S.Pd.I',
             'jabatan' => 'kepala_madrasah',
@@ -71,10 +115,12 @@ class DatabaseSeeder extends Seeder
                 'email' => $data['email'],
                 'password' => Hash::make('password'),
                 'role' => 'guru',
+                'sekolah_id' => $sekolah1->id,
                 'is_active' => true,
             ]);
             $guruKelas[] = Guru::create([
                 'user_id' => $user->id,
+                'sekolah_id' => $sekolah1->id,
                 'nip' => $data['nip'],
                 'nama' => $data['nama'],
                 'jabatan' => 'guru_kelas',
@@ -95,10 +141,12 @@ class DatabaseSeeder extends Seeder
                 'email' => $data['email'],
                 'password' => Hash::make('password'),
                 'role' => 'guru',
+                'sekolah_id' => $sekolah1->id,
                 'is_active' => true,
             ]);
             Guru::create([
                 'user_id' => $user->id,
+                'sekolah_id' => $sekolah1->id,
                 'nip' => $data['nip'],
                 'nama' => $data['nama'],
                 'jabatan' => 'guru_mapel',
@@ -118,6 +166,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($pelajaranGuruKelas as $data) {
             Pelajaran::create([
+                'sekolah_id' => $sekolah1->id,
                 'kode' => $data['kode'],
                 'nama' => $data['nama'],
                 'jenis' => 'guru_kelas',
@@ -138,6 +187,7 @@ class DatabaseSeeder extends Seeder
 
         foreach ($pelajaranGuruMapel as $data) {
             Pelajaran::create([
+                'sekolah_id' => $sekolah1->id,
                 'kode' => $data['kode'],
                 'nama' => $data['nama'],
                 'jenis' => 'guru_mapel',
@@ -166,10 +216,12 @@ class DatabaseSeeder extends Seeder
                 'email' => 'siswa' . ($index + 1) . '@madrasah.com',
                 'password' => Hash::make('password'),
                 'role' => 'siswa',
+                'sekolah_id' => $sekolah1->id,
                 'is_active' => true,
             ]);
             $siswas[] = Siswa::create([
                 'user_id' => $user->id,
+                'sekolah_id' => $sekolah1->id,
                 'nisn' => $data['nisn'],
                 'nama' => $data['nama'],
                 'jenis_kelamin' => $data['jk'],
@@ -217,8 +269,9 @@ class DatabaseSeeder extends Seeder
         $this->call(SoalSeniBudayaKelas1Seeder::class);
 
         $this->command->info('Database seeded successfully!');
-        $this->command->info('Admin: admin@madrasah.com / password');
-        $this->command->info('Kepala: kepala@madrasah.com / password');
+        $this->command->info('Super Admin: superadmin@admin.com / password');
+        $this->command->info('Admin Sekolah 1: admin@minurulhuda.com / password');
+        $this->command->info('Admin Sekolah 2: admin@mialikhlas.com / password');
         $this->command->info('Guru: guru.kelas1@madrasah.com / password');
         $this->command->info('Siswa: siswa1@madrasah.com / password');
     }

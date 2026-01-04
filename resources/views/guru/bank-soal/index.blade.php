@@ -15,6 +15,10 @@
         <p class="page-subtitle">Kelola koleksi soal Anda</p>
     </div>
     <div class="flex gap-2">
+        <a href="{{ route('guru.bank-soal.import') }}" class="btn-success">
+            <i class="fas fa-file-csv"></i>
+            <span>Import CSV</span>
+        </a>
         <a href="{{ route('guru.bank-soal.create-batch') }}" class="btn-secondary">
             <i class="fas fa-layer-group"></i>
             <span>Tambah Batch</span>
@@ -68,8 +72,8 @@
 </div>
 
 <!-- Table -->
-<div class="table-wrapper">
-    <table class="table">
+<div class="table-wrapper w-full overflow-x-auto pb-4">
+    <table class="table min-w-[1000px] w-full">
         <thead>
             <tr>
                 <th>No</th>
@@ -90,7 +94,7 @@
                             {{ Str::limit(strip_tags($soal->pertanyaan), 60) }}
                         </p>
                     </td>
-                    <td>{{ $soal->pelajaran->nama }}</td>
+                    <td>{{ $soal->pelajaran?->nama ?? '-' }}</td>
                     <td>Kelas {{ $soal->tingkat_kelas }}</td>
                     <td>
                         @php

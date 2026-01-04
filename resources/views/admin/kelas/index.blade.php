@@ -22,11 +22,25 @@
 
 <!-- Filter -->
 <div class="card mb-6">
-    <form action="{{ route('admin.kelas.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4">
+    <form action="{{ route('admin.kelas.index') }}" method="GET" class="flex flex-col sm:flex-row gap-4" id="filterForm">
+        <!-- Sekolah Filter (Super Admin Only) -->
+        @if(auth()->user()->isSuperAdmin() && $sekolahs->isNotEmpty())
+            <div class="w-full sm:w-48">
+                <select name="sekolah_id" class="form-select" onchange="document.getElementById('filterForm').submit()">
+                    <option value="">Semua Sekolah</option>
+                    @foreach($sekolahs as $sekolah)
+                        <option value="{{ $sekolah->id }}" {{ request('sekolah_id') == $sekolah->id ? 'selected' : '' }}>
+                            {{ $sekolah->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        @endif
+        
         <div class="w-full sm:w-48">
             <select name="tingkat" class="form-select">
                 <option value="">Semua Tingkat</option>
-                @for($i = 1; $i <= 6; $i++)
+                @for($i = 1; $i <= 12; $i++)
                     <option value="{{ $i }}" {{ request('tingkat') == $i ? 'selected' : '' }}>Kelas {{ $i }}</option>
                 @endfor
             </select>
@@ -35,7 +49,7 @@
             <i class="fas fa-filter"></i>
             <span>Filter</span>
         </button>
-        @if(request()->hasAny(['tingkat']))
+        @if(request()->hasAny(['tingkat', 'sekolah_id']))
             <a href="{{ route('admin.kelas.index') }}" class="btn-ghost">
                 <i class="fas fa-times"></i>
                 <span>Reset</span>
@@ -59,6 +73,12 @@
                     </div>
                 </div>
             </div>
+            
+            @if(auth()->user()->isSuperAdmin())
+                <div class="mt-3">
+                    <span class="badge-primary text-xs">{{ $kelas->sekolah->nama ?? '-' }}</span>
+                </div>
+            @endif
             
             <div class="mt-4 pt-4 border-t border-gray-100">
                 <div class="flex items-center justify-between text-sm">

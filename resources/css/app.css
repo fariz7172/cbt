@@ -72,7 +72,7 @@
 
     /* Cards */
     .card {
-        @apply bg-white rounded-2xl shadow-soft p-6 transition-all duration-200;
+        @apply bg-white rounded-2xl shadow-soft p-6 transition-all duration-200 max-w-full overflow-hidden;
     }
 
     .card-hover {
@@ -118,11 +118,12 @@
 
     /* Tables */
     .table-wrapper {
-        @apply overflow-x-auto rounded-2xl bg-white shadow-soft;
+        @apply overflow-x-auto rounded-2xl bg-white shadow-soft max-w-full;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
     }
 
     .table {
-        @apply w-full text-sm text-left;
+        @apply w-full text-sm text-left min-w-max;
     }
 
     .table thead {

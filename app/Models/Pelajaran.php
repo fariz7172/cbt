@@ -10,6 +10,7 @@ class Pelajaran extends Model
     use HasFactory;
 
     protected $fillable = [
+        'sekolah_id',
         'kode',
         'nama',
         'jenis',
@@ -19,6 +20,14 @@ class Pelajaran extends Model
     protected $casts = [
         'is_active' => 'boolean',
     ];
+
+    /**
+     * Get the sekolah for this pelajaran.
+     */
+    public function sekolah()
+    {
+        return $this->belongsTo(Sekolah::class);
+    }
 
     /**
      * Get soals for this pelajaran.

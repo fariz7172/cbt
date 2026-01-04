@@ -18,6 +18,11 @@ class RombelController extends Controller
         $query = Rombel::with(['kelas', 'waliKelas'])
             ->withCount(['siswas', 'pelajarans']);
 
+        // Filter by sekolah for Super Admin
+        if ($request->filled('sekolah_id')) {
+            $query->where('sekolah_id', $request->sekolah_id);
+        }
+
         if ($request->filled('tahun_ajaran')) {
             $query->where('tahun_ajaran', $request->tahun_ajaran);
         }
@@ -33,8 +38,13 @@ class RombelController extends Controller
         $rombels = $query->latest()->paginate(10)->withQueryString();
         $kelass = Kelas::orderBy('tingkat')->orderBy('nama')->get();
         $tahunAjarans = Rombel::distinct()->pluck('tahun_ajaran');
+        
+        // Get all sekolahs for filter (only for Super Admin)
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
 
-        return view('admin.rombel.index', compact('rombels', 'kelass', 'tahunAjarans'));
+        return view('admin.rombel.index', compact('rombels', 'kelass', 'tahunAjarans', 'sekolahs'));
     }
 
     public function create()
@@ -42,12 +52,18 @@ class RombelController extends Controller
         $kelass = Kelas::orderBy('tingkat')->orderBy('nama')->get();
         $guruKelas = Guru::where('jabatan', 'guru_kelas')->orderBy('nama')->get();
         
-        return view('admin.rombel.create', compact('kelass', 'guruKelas'));
+        // Get all sekolahs for Super Admin
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
+        
+        return view('admin.rombel.create', compact('kelass', 'guruKelas', 'sekolahs'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'sekolah_id' => auth()->user()->isSuperAdmin() ? 'required|exists:sekolahs,id' : 'nullable',
             'kelas_id' => 'required|exists:kelas,id',
             'wali_kelas_id' => 'required|exists:gurus,id',
             'tahun_ajaran' => 'required|string|max:20',
@@ -64,6 +80,10 @@ class RombelController extends Controller
             return back()->with('error', 'Rombel untuk kelas, tahun ajaran, dan semester ini sudah ada.');
         }
 
+        $validated['sekolah_id'] = auth()->user()->isSuperAdmin() 
+            ? $validated['sekolah_id'] 
+            : auth()->user()->sekolah_id;
+            
         Rombel::create($validated);
 
         return redirect()->route('admin.rombel.index')

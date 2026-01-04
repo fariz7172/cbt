@@ -17,6 +17,11 @@ class SiswaController extends Controller
     {
         $query = Siswa::with(['user', 'kelas']);
 
+        // Filter by sekolah for Super Admin
+        if ($request->filled('sekolah_id')) {
+            $query->where('sekolah_id', $request->sekolah_id);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -34,20 +39,39 @@ class SiswaController extends Controller
         }
 
         $siswas = $query->latest()->paginate(10)->withQueryString();
-        $kelass = Kelas::orderBy('tingkat')->orderBy('nama')->get();
+        
+        // Filter kelas based on selected sekolah (for Super Admin)
+        $kelasQuery = Kelas::orderBy('tingkat')->orderBy('nama');
+        if ($request->filled('sekolah_id')) {
+            $kelasQuery->where('sekolah_id', $request->sekolah_id);
+        }
+        $kelass = $kelasQuery->get();
+        
+        // Get all sekolahs for filter (only for Super Admin)
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
 
-        return view('admin.siswa.index', compact('siswas', 'kelass'));
+        return view('admin.siswa.index', compact('siswas', 'kelass', 'sekolahs'));
     }
 
     public function create()
     {
+        // Load all kelas with sekolah_id for filtering
         $kelass = Kelas::orderBy('tingkat')->orderBy('nama')->get();
-        return view('admin.siswa.create', compact('kelass'));
+        
+        // Get all sekolahs for Super Admin
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
+            
+        return view('admin.siswa.create', compact('kelass', 'sekolahs'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'sekolah_id' => auth()->user()->isSuperAdmin() ? 'required|exists:sekolahs,id' : 'nullable',
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
@@ -66,11 +90,17 @@ class SiswaController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => 'siswa',
+                'sekolah_id' => auth()->user()->isSuperAdmin() 
+                    ? $validated['sekolah_id'] 
+                    : auth()->user()->sekolah_id,
                 'is_active' => true,
             ]);
 
             Siswa::create([
                 'user_id' => $user->id,
+                'sekolah_id' => auth()->user()->isSuperAdmin() 
+                    ? $validated['sekolah_id'] 
+                    : auth()->user()->sekolah_id,
                 'kelas_id' => $validated['kelas_id'] ?? null,
                 'nisn' => $validated['nisn'],
                 'nama' => $validated['nama'],

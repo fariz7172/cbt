@@ -16,6 +16,11 @@ class GuruController extends Controller
     {
         $query = Guru::with('user');
 
+        // Filter by sekolah for Super Admin
+        if ($request->filled('sekolah_id')) {
+            $query->where('sekolah_id', $request->sekolah_id);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
@@ -29,18 +34,29 @@ class GuruController extends Controller
         }
 
         $gurus = $query->latest()->paginate(10)->withQueryString();
+        
+        // Get all sekolahs for filter (only for Super Admin)
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
 
-        return view('admin.guru.index', compact('gurus'));
+        return view('admin.guru.index', compact('gurus', 'sekolahs'));
     }
 
     public function create()
     {
-        return view('admin.guru.create');
+        // Get all sekolahs for Super Admin
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
+            
+        return view('admin.guru.create', compact('sekolahs'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'sekolah_id' => auth()->user()->isSuperAdmin() ? 'required|exists:sekolahs,id' : 'nullable',
             'nama' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6|confirmed',
@@ -56,11 +72,17 @@ class GuruController extends Controller
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
                 'role' => 'guru',
+                'sekolah_id' => auth()->user()->isSuperAdmin() 
+                    ? $validated['sekolah_id'] 
+                    : auth()->user()->sekolah_id,
                 'is_active' => true,
             ]);
 
             Guru::create([
                 'user_id' => $user->id,
+                'sekolah_id' => auth()->user()->isSuperAdmin() 
+                    ? $validated['sekolah_id'] 
+                    : auth()->user()->sekolah_id,
                 'nip' => $validated['nip'],
                 'nama' => $validated['nama'],
                 'jabatan' => $validated['jabatan'],
@@ -81,12 +103,18 @@ class GuruController extends Controller
 
     public function edit(Guru $guru)
     {
-        return view('admin.guru.edit', compact('guru'));
+        // Get all sekolahs for Super Admin
+        $sekolahs = auth()->user()->isSuperAdmin() 
+            ? \App\Models\Sekolah::orderBy('nama')->get() 
+            : collect();
+            
+        return view('admin.guru.edit', compact('guru', 'sekolahs'));
     }
 
     public function update(Request $request, Guru $guru)
     {
         $validated = $request->validate([
+            'sekolah_id' => auth()->user()->isSuperAdmin() ? 'required|exists:sekolahs,id' : 'nullable',
             'nama' => 'required|string|max:255',
             'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($guru->user_id)],
             'password' => 'nullable|string|min:6|confirmed',
@@ -103,6 +131,11 @@ class GuruController extends Controller
                 'email' => $validated['email'],
                 'is_active' => $validated['is_active'] ?? true,
             ];
+            
+            // Update sekolah_id for Super Admin
+            if (auth()->user()->isSuperAdmin() && isset($validated['sekolah_id'])) {
+                $userData['sekolah_id'] = $validated['sekolah_id'];
+            }
 
             if (!empty($validated['password'])) {
                 $userData['password'] = Hash::make($validated['password']);
@@ -110,13 +143,20 @@ class GuruController extends Controller
 
             $guru->user->update($userData);
 
-            $guru->update([
+            $guruData = [
                 'nip' => $validated['nip'],
                 'nama' => $validated['nama'],
                 'jabatan' => $validated['jabatan'],
                 'no_hp' => $validated['no_hp'] ?? null,
                 'alamat' => $validated['alamat'] ?? null,
-            ]);
+            ];
+            
+            // Update sekolah_id for Super Admin
+            if (auth()->user()->isSuperAdmin() && isset($validated['sekolah_id'])) {
+                $guruData['sekolah_id'] = $validated['sekolah_id'];
+            }
+            
+            $guru->update($guruData);
         });
 
         return redirect()->route('admin.guru.index')

@@ -65,7 +65,9 @@ class BankSoalController extends Controller
     public function index(Request $request)
     {
         $guru = auth()->user()->guru;
-        $query = Soal::with('pelajaran')->where('guru_id', $guru->id);
+        
+        // Guru only sees soals they created themselves
+        $query = Soal::with('pelajaran', 'guru')->where('guru_id', $guru->id);
 
         if ($request->filled('pelajaran_id')) {
             $query->where('pelajaran_id', $request->pelajaran_id);
@@ -286,5 +288,58 @@ class BankSoalController extends Controller
 
         return redirect()->route('guru.bank-soal.index')
             ->with('success', "{$count} soal berhasil ditambahkan.");
+    }
+
+    /**
+     * Download template Excel for import.
+     */
+    public function downloadTemplate()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\TemplateSoalExport, 'template_soal.xlsx');
+    }
+
+    /**
+     * Show import form.
+     */
+    public function showImportForm()
+    {
+        return view('guru.bank-soal.import');
+    }
+
+    /**
+     * Process Excel import.
+     */
+    public function processImport(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls,csv|max:2048',
+        ]);
+
+        $guru = auth()->user()->guru;
+        $import = new \App\Imports\SoalImport($guru);
+        
+        try {
+            \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('file'));
+            
+            $errors = $import->getErrors();
+            $count = $import->getImportedCount();
+            
+            $message = "{$count} soal berhasil diimport.";
+            if (count($errors) > 0) {
+                $message .= " " . count($errors) . " baris gagal.";
+            }
+
+            return redirect()->route('guru.bank-soal.index')
+                ->with('success', $message)
+                ->with('import_errors', $errors);
+                
+        } catch (\Throwable $e) {
+            // Check for ZipArchive error
+            if (str_contains($e->getMessage(), 'ZipArchive') || str_contains($e->getMessage(), 'zip')) {
+                return back()->with('error', 'Gagal: Ekstensi PHP Zip belum aktif di server. Pastikan extension=zip diaktifkan di php.ini dan restart server.')->withInput();
+            }
+            
+            return back()->with('error', 'Gagal import file: ' . $e->getMessage())->withInput();
+        }
     }
 }
