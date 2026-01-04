@@ -16,17 +16,28 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $sekolahId = auth()->user()->sekolah_id;
+
         $stats = [
-            'total_guru' => Guru::count(),
-            'total_siswa' => Siswa::count(),
-            'total_kelas' => Kelas::count(),
-            'total_rombel' => Rombel::count(),
-            'total_pelajaran' => Pelajaran::count(),
-            'total_ujian' => Ujian::count(),
-            'guru_by_jabatan' => Guru::selectRaw('jabatan, count(*) as total')
+            'total_guru' => Guru::where('sekolah_id', $sekolahId)->count(),
+            'total_siswa' => Siswa::where('sekolah_id', $sekolahId)->count(),
+            'total_kelas' => Kelas::where('sekolah_id', $sekolahId)->count(),
+            'total_rombel' => Rombel::where('sekolah_id', $sekolahId)->count(),
+            'total_pelajaran' => Pelajaran::where('sekolah_id', $sekolahId)->count(),
+            // Ujian linked to Guru -> Sekolah
+            'total_ujian' => Ujian::whereHas('guru', function($q) use ($sekolahId) {
+                $q->where('sekolah_id', $sekolahId);
+            })->count(),
+            
+            'guru_by_jabatan' => Guru::where('sekolah_id', $sekolahId)
+                ->selectRaw('jabatan, count(*) as total')
                 ->groupBy('jabatan')
                 ->pluck('total', 'jabatan'),
+            
             'recent_ujians' => Ujian::with(['guru', 'pelajaran', 'rombel.kelas'])
+                ->whereHas('guru', function($q) use ($sekolahId) {
+                    $q->where('sekolah_id', $sekolahId);
+                })
                 ->latest()
                 ->take(5)
                 ->get(),
