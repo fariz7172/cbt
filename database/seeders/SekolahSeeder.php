@@ -170,11 +170,15 @@ class SekolahSeeder extends Seeder
                 ]
             );
 
-            // Create admin for this sekolah using NSM for short email
+            // Create admin for this sekolah
+            // Format: admin@NAMASEKOLAH.com (spaces removed)
+            // Example: MA AL MARJAN -> admin@MAALMARJAN.com
+            $cleanName = preg_replace('/[^a-zA-Z0-9]/', '', $data['nama']);
+            
             User::firstOrCreate(
-                ['email' => "admin{$data['nsm']}@cbt.com"],
+                ['email' => "admin@{$cleanName}.com"],
                 [
-                    'name' => Str::limit("Admin " . $data['nama'], 50, ''),
+                    'name' => "Admin " . $data['nama'],
                     'password' => Hash::make('password'),
                     'role' => 'admin',
                     'sekolah_id' => $sekolah->id,
@@ -185,7 +189,7 @@ class SekolahSeeder extends Seeder
 
         $this->command->info('Sekolah and Admin seeding completed!');
         $this->command->info('Total sekolah: ' . count($sekolahData));
-        $this->command->info('Admin login format: admin{NSM}@cbt.com / password');
-        $this->command->info('Example: admin111131720002@cbt.com');
+        $this->command->info('Admin login format: admin@NAMASEKOLAH.com / password');
+        $this->command->info('Example: admin@MAALMARJAN.com');
     }
 }
