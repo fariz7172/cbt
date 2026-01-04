@@ -157,7 +157,7 @@ class SekolahSeeder extends Seeder
 
         ];
 
-        foreach ($sekolahData as $data) {
+        foreach ($sekolahData as $index => $data) {
             // Create sekolah
             $sekolah = Sekolah::firstOrCreate(
                 ['nsm' => $data['nsm']],
@@ -165,17 +165,16 @@ class SekolahSeeder extends Seeder
                     'nama' => $data['nama'],
                     'alamat' => 'Jakarta',
                     'telepon' => '-',
-                    'email' => $this->generateEmail($data['nama']),
+                    'email' => 'info' . $data['nsm'] . '@sch.id',
                     'is_active' => true,
                 ]
             );
 
-            // Create admin for this sekolah
-            $emailSlug = $this->generateEmailSlug($data['nama']);
+            // Create admin for this sekolah using NSM for short email
             User::firstOrCreate(
-                ['email' => "admin@{$emailSlug}.com"],
+                ['email' => "admin{$data['nsm']}@cbt.com"],
                 [
-                    'name' => "Admin ({$data['nama']})",
+                    'name' => Str::limit("Admin " . $data['nama'], 50, ''),
                     'password' => Hash::make('password'),
                     'role' => 'admin',
                     'sekolah_id' => $sekolah->id,
@@ -186,30 +185,7 @@ class SekolahSeeder extends Seeder
 
         $this->command->info('Sekolah and Admin seeding completed!');
         $this->command->info('Total sekolah: ' . count($sekolahData));
-        $this->command->info('Admin login format: admin@namasekolah.com / password');
-    }
-
-    /**
-     * Generate email from school name
-     */
-    private function generateEmail(string $nama): string
-    {
-        return 'info@' . $this->generateEmailSlug($nama) . '.sch.id';
-    }
-
-    /**
-     * Generate email slug from school name
-     */
-    private function generateEmailSlug(string $nama): string
-    {
-        // Remove common prefixes
-        $nama = preg_replace('/^(MIN|MIS|MI|MAS|MTS|MTsS)\s+/i', '', $nama);
-        
-        // Convert to lowercase, replace spaces with empty, remove special chars
-        $slug = Str::lower($nama);
-        $slug = preg_replace('/[^a-z0-9]/', '', $slug);
-        
-        // Limit length
-        return Str::limit($slug, 20, '');
+        $this->command->info('Admin login format: admin{NSM}@cbt.com / password');
+        $this->command->info('Example: admin111131720002@cbt.com');
     }
 }
